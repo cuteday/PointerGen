@@ -70,6 +70,9 @@ class Batch:
         self.enc_pad_mask = self.enc_inp.ne(PAD)
         self.dec_pad_mask = self.dec_inp.ne(PAD)
 
+        self.original_abs = [poi.original_abstract for poi in batch]
+        self.original_art = [poi.original_article for poi in batch]
+
 
 class CNNDMDataset(Dataset):
     def __init__(self, split: str, path: str, config, vocab) -> None:
