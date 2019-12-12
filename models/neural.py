@@ -26,7 +26,7 @@ class ReduceState(nn.Module):
         hidden_reduced_c = F.relu(self.reduce_c(c_in))
 
         return (hidden_reduced_h.unsqueeze(0), hidden_reduced_c.unsqueeze(0))  # h, c dim = 1 x b x hidden_dim
-        
+         
 class Attention(nn.Module):
     def __init__(self, config):
         super(Attention, self).__init__()

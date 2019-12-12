@@ -5,13 +5,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from models.utils import *
 from models.neural import Attention, ReduceState
-
+ 
 class LSTMEncoder(nn.Module):
     def __init__(self, config):
         super(LSTMEncoder, self).__init__()
 
         self.config = config
-        self.embedding = nn.Embedding(config.vocab_size + 1000, config.emb_dim)
+        self.embedding = nn.Embedding(config.vocab_size + 5, config.emb_dim)
         self.lstm = nn.LSTM(config.emb_dim, config.hidden_dim, num_layers=1, batch_first=True, bidirectional=True)
         self.W_h = nn.Linear(config.hidden_dim * 2, config.hidden_dim * 2, bias=False)
 
@@ -25,7 +25,7 @@ class LSTMEncoder(nn.Module):
             encoder feature: linear transformed hidden 
         """
         embedded = self.embedding(inputs)
-
+ 
         # packed = pack_padded_sequence(embedded, seq_lens, batch_first=True)
         # output, hidden = self.lstm(packed)
         # # output, (h_n, c_n)
@@ -59,7 +59,7 @@ class Decoder(nn.Module):
 
         init_wt_normal(self.embedding.weight)  # embedding 使用正态初始化...
         init_lstm_wt(self.lstm)
-        init_linear_wt(self.out1)
+        #init_linear_wt(self.out1)
         init_linear_wt(self.out2)
 
     def forward(self, y_t_1, s_t_1, encoder_outputs, encoder_feature, enc_padding_mask,

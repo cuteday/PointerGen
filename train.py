@@ -36,7 +36,7 @@ class Trainer:
             model.load_state_dict(checkpoint['model'])
         
         self.model = model.to(device)
-        self.optimizer = Adagrad(model.parameters(), config.learning_rate, config.initial_acc)
+        self.optimizer = Adagrad(model.parameters(), lr = config.learning_rate, initial_accumulator_value = config.initial_acc)
         if checkpoint is not None:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
         
