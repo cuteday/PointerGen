@@ -21,10 +21,10 @@ class Example:
         abs_ids = [vocab.word2id(w) for w in abstract_words]
 
         self.dec_inp, self.dec_tgt = self.get_dec_inp_tgt(abs_ids, config.max_tgt_ntokens)
+        self.art_extend_vocab, self.art_oovs = article2ids(src_words, vocab)
+        abs_extend_vocab = abstract2ids(abstract_words, vocab, self.art_oovs)
 
-        if config.pointer_gen:
-            self.art_extend_vocab, self.art_oovs = article2ids(src_words, vocab)
-            abs_extend_vocab = abstract2ids(abstract_words, vocab, self.art_oovs)
+        if config.pointer_gen:      
             # 改写目标输出 反映COPY OOV
             _, self.dec_tgt = self.get_dec_inp_tgt(abs_extend_vocab, config.max_tgt_ntokens)
 
@@ -44,6 +44,12 @@ class Example:
 
 class Batch:
     def __init__(self, batch):
+        # CNNDM中有114514个空样例
+        # 过滤掉他们（我有特别的filter技巧~）
+        batch = list(filter(lambda poi: len(poi.enc_inp)>0, batch))
+        if len(batch) < 30:
+            print('find %d empty example(s)...'%(30 - len(batch)))
+
         dec_inp = [poi.dec_inp for poi in batch]
         dec_tgt = [poi.dec_tgt for poi in batch]
         enc_inp = [poi.enc_inp for poi in batch]
