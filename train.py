@@ -20,7 +20,7 @@ class Trainer:
     def __init__(self, config):
         self.config = config
         self.vocab = Vocab(config.vocab_file, config.vocab_size)
-        self.train_data = CNNDMDataset('val', config.data_path, config, self.vocab)
+        self.train_data = CNNDMDataset('train', config.data_path, config, self.vocab)
         self.validate_data = CNNDMDataset('val', config.data_path, config, self.vocab)
         # self.model = Model(config).to(device)
         # self.optimizer = None
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('-max_tgt_ntokens', default=100, type=int)
     parser.add_argument('-batch_size', default=30, type=int)
     # Hyper params
-    parser.add_argument('-learning_rate', default=0.1, type=float)
+    parser.add_argument('-learning_rate', default=0.15, type=float)
     parser.add_argument('-cov_loss_wt', default=1.0, type=float)
     parser.add_argument('-initial_acc', default=0.1, type=float)
     parser.add_argument('-max_grad_norm', default=2.0, type=float)
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # Train params
     parser.add_argument('-validate_every', default=5000, type=int)
     parser.add_argument('-test_every', default=5000, type=int)
-    parser.add_argument('-report_every', default=50, type=int)
+    parser.add_argument('-report_every', default=10, type=int)
     parser.add_argument('-save_every', default=1000, type=int)
     config_ = parser.parse_args()
     trainer = Trainer(config_)

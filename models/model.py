@@ -100,7 +100,7 @@ class Decoder(nn.Module):
         if config.pointer_gen:
             p_gen_input = torch.cat((c_t, s_t_hat, x), 1)  # B x (2*2*hidden_dim + emb_dim)
             p_gen = self.p_gen_linear(p_gen_input)
-            p_gen = F.sigmoid(p_gen)
+            p_gen = torch.sigmoid(p_gen)
 
         output = torch.cat((lstm_out.view(-1, config.hidden_dim), c_t), 1) # B x hidden_dim * 3
         output = self.out1(output) # B x hidden_dim
