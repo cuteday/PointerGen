@@ -158,12 +158,8 @@ if __name__ == '__main__':
     # Data preprocess
     parser.add_argument('-max_src_ntokens', default=400, type=int)
     parser.add_argument('-max_tgt_ntokens', default=100, type=int)
-<<<<<<< HEAD
-    parser.add_argument('-batch_size', default=35, type=int)
-=======
     parser.add_argument('-max_dec_steps', default=120, type=int)
     parser.add_argument('-batch_size', default=30, type=int)
->>>>>>> 80fc900931e92c41571fea5274eb2364ba10ded9
     # Hyper params
     parser.add_argument('-learning_rate', default=0.20, type=float)
     parser.add_argument('-cov_loss_wt', default=1.0, type=float)
@@ -176,18 +172,10 @@ if __name__ == '__main__':
     # Decode
     parser.add_argument('-beam_size', default=5, type=int)
     # Train params
-<<<<<<< HEAD
-    parser.add_argument('-validate_every', default=1000, type=int)
-    parser.add_argument('-train_epoch', default=5, type=int)
-    parser.add_argument('-test_every', default=5000, type=int)
-    parser.add_argument('-report_every', default=50, type=int)
-    parser.add_argument('-save_every', default=2000, type=int)
-=======
     parser.add_argument('-validate_every', default=5000, type=int)
     parser.add_argument('-report_every', default=10, type=int)
     parser.add_argument('-save_every', default=5000, type=int)
     
->>>>>>> 80fc900931e92c41571fea5274eb2364ba10ded9
     config_ = parser.parse_args()
     trainer = Trainer(config_)
     trainer.train()
