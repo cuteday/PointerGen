@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from data import Batch, CNNDMDataset, Collate, Vocab
 from data_utils import get_input_from_batch, get_output_from_batch
 from utils.variables import *
+from utils.logging import logging
 from models.model import Model
 from models.utils import calc_running_avg_loss
 
@@ -28,15 +29,16 @@ class Trainer:
     def setup(self, config):
         
         model = Model(config)
-        optimizer = Adagrad(model.parameters(), config.learning_rate, config.initial_acc)
-
+        checkpoint = None
         if config.train_from != '':
+            logging('Train from %s'%config.train_from)
             checkpoint = torch.load(config.train_from, map_location='cpu')
             model.load_state_dict(checkpoint['model'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
         
         self.model = model.to(device)
-        self.optimizer = optimizer
+        self.optimizer = Adagrad(model.parameters(), config.learning_rate, config.initial_acc)
+        if checkpoint is not None:
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
         
     def train_one(self, batch):
 
@@ -89,12 +91,12 @@ class Trainer:
             loss.backward()
             clip_grad_norm_(self.model.parameters(), config.max_grad_norm)
             self.optimizer.step()
-            print(loss.item())
+            #print(loss.item())
 
             running_avg_loss = calc_running_avg_loss(loss.item(), running_avg_loss)
 
             if step and step % config.report_every == 0:
-                print(f"Step {step} Train loss {running_avg_loss}")    
+                print("Step %d Train loss %.3f"%(step, running_avg_loss))    
             if step and step % config.validate_every == 0:
                 self.validate()
             if step and step % config.save_every == 0:
@@ -110,15 +112,17 @@ class Trainer:
             losses.append(loss.item())
         self.model.train()
         ave_loss = sum(losses) / len(losses)
-        print(f'Validate loss : {ave_loss}')
+        print('Validate loss : %f'%ave_loss)
 
     def save(self, step):
         state = {
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict()
         }
-        save_path = os.path.join(self.config.model_path, f'model_s{step}')
+        save_path = os.path.join(self.config.model_path, 'model_s%d.pt'%step)
+        logging('Saving model step %d to %s...'%(step, save_path))
         torch.save(state, save_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='urara')
@@ -126,29 +130,29 @@ if __name__ == '__main__':
     parser.add_argument('-data_path', default=CNNDMPath, type=str)
     parser.add_argument('-glove_path', default=glovePath, type=str)
     parser.add_argument('-vocab_file', default=CNNDMPath+'/vocab_cnt.pkl', type=str)
-    parser.add_argument('-model_path', default='./saved_models', type=str)
+    parser.add_argument('-model_path', default='../saved_models', type=str)
     parser.add_argument('-train_from', default='', type=str)
     # model mode...
     parser.add_argument('-is_coverage', default=1, type=int)
     parser.add_argument('-pointer_gen', default=1, type=int)
     # Data preprocess
-    parser.add_argument('-max_src_ntokens', default=400, type=int)
+    parser.add_argument('-max_src_ntokens', default=500, type=int)
     parser.add_argument('-max_tgt_ntokens', default=100, type=int)
-    parser.add_argument('-batch_size', default=1, type=int)
+    parser.add_argument('-batch_size', default=30, type=int)
     # Hyper params
-    parser.add_argument('-learning_rate', default=0.02, type=float)
+    parser.add_argument('-learning_rate', default=0.1, type=float)
     parser.add_argument('-cov_loss_wt', default=1.0, type=float)
     parser.add_argument('-initial_acc', default=0.1, type=float)
-    parser.add_argument('-max_grad_norm', default=0.01, type=float)
+    parser.add_argument('-max_grad_norm', default=2.0, type=float)
     parser.add_argument('-vocab_size', default=50000, type=int)
     parser.add_argument('-emb_dim', default=128, type=int)
     parser.add_argument('-hidden_dim', default=256, type=int)
     parser.add_argument('-eps', default=1e-12, type=float)
     # Train params
-    parser.add_argument('-validate_every', default=1000, type=int)
+    parser.add_argument('-validate_every', default=5000, type=int)
     parser.add_argument('-test_every', default=5000, type=int)
     parser.add_argument('-report_every', default=50, type=int)
-    parser.add_argument('-save_every', default=10000, type=int)
+    parser.add_argument('-save_every', default=1000, type=int)
     config_ = parser.parse_args()
     trainer = Trainer(config_)
     trainer.train()

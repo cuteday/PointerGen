@@ -3,6 +3,7 @@ import torch.nn as nn
 
 rand_unif_init_mag=0.02
 trunc_norm_init_std = 1e-4
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def init_lstm_wt(lstm):
     """
@@ -54,8 +55,8 @@ def reorder_sequence(sequence_emb, order, batch_first=True):
     batch_dim = 0 if batch_first else 1
     assert len(order) == sequence_emb.size()[batch_dim]
 
-    order = torch.LongTensor(order).to(sequence_emb.device)
-    sorted_ = sequence_emb.index_select(index=order, dim=batch_dim)
+    order = torch.tensor(order).to(device)
+    sorted_ = sequence_emb.index_select(batch_dim, order)
 
     return sorted_
 
@@ -69,7 +70,7 @@ def reorder_lstm_states(lstm_states, order):
     assert lstm_states[0].size() == lstm_states[1].size()
     assert len(order) == lstm_states[0].size()[1]
 
-    order = torch.LongTensor(order).to(lstm_states[0].device)
+    order = torch.tensor(order).to(device)
     sorted_states = (lstm_states[0].index_select(index=order, dim=1),
                      lstm_states[1].index_select(index=order, dim=1))
 
@@ -91,7 +92,12 @@ def lstm_encoder(sequence, lstm ,seq_lens=None, batch_first = True):
         sort_ind = sorted(range(len(seq_lens)),
                           key=lambda i: seq_lens[i], reverse=True)
         seq_lens = [seq_lens[i] for i in sort_ind]
-        sequence = reorder_sequence(sequence, sort_ind, batch_first)
+        try:
+            sequence = reorder_sequence(sequence, sort_ind, batch_first)
+        except:
+            print(sequence.size())
+            print(sort_ind)
+            assert False
 
     if seq_lens:
         packed_seq = nn.utils.rnn.pack_padded_sequence(sequence, seq_lens, batch_first = batch_first)
@@ -100,7 +106,12 @@ def lstm_encoder(sequence, lstm ,seq_lens=None, batch_first = True):
 
         back_map = {ind: i for i, ind in enumerate(sort_ind)}
         reorder_ind = [back_map[i] for i in range(len(seq_lens))]
-        lstm_out = reorder_sequence(lstm_out, reorder_ind, batch_first)
+        try:
+            lstm_out = reorder_sequence(lstm_out, reorder_ind, batch_first)
+        except:
+            print(lstm_out.size())
+            print(reorder_ind)
+            assert False
         final_states = reorder_lstm_states(final_states, reorder_ind)
     else:
         lstm_out, final_states = lstm(sequence)

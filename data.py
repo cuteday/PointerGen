@@ -47,7 +47,7 @@ class Batch:
         dec_inp = [poi.dec_inp for poi in batch]
         dec_tgt = [poi.dec_tgt for poi in batch]
         enc_inp = [poi.enc_inp for poi in batch]
-        print(dec_inp)
+        #print(dec_inp)
 
         art_extend_vocab = [poi.art_extend_vocab for poi in batch]
 
@@ -73,7 +73,6 @@ class CNNDMDataset(Dataset):
         self.config = config
         self.vocab = vocab
         
-
     def __len__(self) -> int:
         return self._n_data
 

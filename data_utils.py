@@ -140,6 +140,7 @@ def get_output_from_batch(batch, device):
     dec_batch = dec_batch.to(device)
     dec_pad_mask = dec_pad_mask.to(device)
     tgt_batch = tgt_batch.to(device)
+    dec_lens_var = dec_lens_var.to(device)
 
     return dec_batch, dec_pad_mask, max_dec_len, dec_lens_var, tgt_batch
 
