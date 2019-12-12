@@ -5,13 +5,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from models.utils import *
 from models.neural import Attention, ReduceState
- 
+
 class LSTMEncoder(nn.Module):
     def __init__(self, config):
         super(LSTMEncoder, self).__init__()
 
         self.config = config
-        self.embedding = nn.Embedding(config.vocab_size + 5, config.emb_dim)
+        self.embedding = nn.Embedding(config.vocab_size + 100, config.emb_dim)
         self.lstm = nn.LSTM(config.emb_dim, config.hidden_dim, num_layers=1, batch_first=True, bidirectional=True)
         self.W_h = nn.Linear(config.hidden_dim * 2, config.hidden_dim * 2, bias=False)
 
@@ -25,13 +25,6 @@ class LSTMEncoder(nn.Module):
             encoder feature: linear transformed hidden 
         """
         embedded = self.embedding(inputs)
- 
-        # packed = pack_padded_sequence(embedded, seq_lens, batch_first=True)
-        # output, hidden = self.lstm(packed)
-        # # output, (h_n, c_n)
-
-        # encoder_outputs, _ = pad_packed_sequence(output, batch_first=True)  # h dim = B x t_k x n
-        # encoder_outputs = encoder_outputs.contiguous()
 
         encoder_outputs, hidden = lstm_encoder(embedded, self.lstm, seq_lens, True)
         
@@ -138,13 +131,6 @@ class Model(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.reduce_state = reduce_state
-
-        # if model_file_path is not None:
-        #     state = torch.load(model_file_path, map_location=lambda storage, location: storage)
-        #     self.load_state_dict(state['model'])
-            # self.encoder.load_state_dict(state['encoder_state_dict'])
-            # self.decoder.load_state_dict(state['decoder_state_dict'], strict=False)
-            # self.reduce_state.load_state_dict(state['reduce_state_dict'])
-
+        
     def forward(self):
         pass
