@@ -1,18 +1,18 @@
 import argparse
 import os
-import time
 
 import torch
 from torch.nn.utils import clip_grad_norm_
 from torch.optim import Adagrad
 from torch.utils.data import DataLoader
 
-from data import Batch, CNNDMDataset, Collate, Vocab
+from data import CNNDMDataset, Collate, Vocab
 from data_utils import get_input_from_batch, get_output_from_batch
 from utils.variables import *
 from utils.logging import logging
 from models.model import Model
 from models.utils import calc_running_avg_loss
+from decode import BeamSearch
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -123,6 +123,15 @@ class Trainer:
         logging('Saving model step %d to %s...'%(step, save_path))
         torch.save(state, save_path)
 
+def test(config, model=None, step = 0):
+    
+    if model is None and config.test_from != '':
+        saved_model = torch.load(config.test_from, map_location='cpu')
+        model = Model(config, is_eval=True).load_state_dict(saved_model['model'])
+        step = saved_model['step']
+
+    predictor = BeamSearch(model, config, step)
+    predictor.decode()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='urara')
@@ -131,6 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('-glove_path', default=glovePath, type=str)
     parser.add_argument('-vocab_file', default=CNNDMPath+'/vocab_cnt.pkl', type=str)
     parser.add_argument('-model_path', default='../saved_models', type=str)
+    parser.add_argument('-log_root', default='../results', type=str)
     parser.add_argument('-train_from', default='', type=str)
     # model mode...
     parser.add_argument('-is_coverage', default=1, type=int)
@@ -138,6 +148,7 @@ if __name__ == '__main__':
     # Data preprocess
     parser.add_argument('-max_src_ntokens', default=500, type=int)
     parser.add_argument('-max_tgt_ntokens', default=100, type=int)
+    parser.add_argument('-max_dec_steps', default=120, type=int)
     parser.add_argument('-batch_size', default=30, type=int)
     # Hyper params
     parser.add_argument('-learning_rate', default=0.15, type=float)
@@ -148,11 +159,13 @@ if __name__ == '__main__':
     parser.add_argument('-emb_dim', default=128, type=int)
     parser.add_argument('-hidden_dim', default=256, type=int)
     parser.add_argument('-eps', default=1e-12, type=float)
+    # Decode
+    parser.add_argument('-beam_size', default=5, type=int)
     # Train params
     parser.add_argument('-validate_every', default=5000, type=int)
-    parser.add_argument('-test_every', default=5000, type=int)
     parser.add_argument('-report_every', default=10, type=int)
-    parser.add_argument('-save_every', default=1000, type=int)
+    parser.add_argument('-save_every', default=5000, type=int)
+    
     config_ = parser.parse_args()
     trainer = Trainer(config_)
     trainer.train()
