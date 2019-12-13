@@ -1,10 +1,7 @@
-#Except for the pytorch part content of this file is copied from https://github.com/abisee/pointer-generator/blob/master/
+#code from https://github.com/abisee/pointer-generator/blob/master/
 from __future__ import unicode_literals, print_function, division
 
 import sys
-
-# reload(sys)
-# sys.setdefaultencoding('utf8')
 
 import os
 import time
@@ -47,7 +44,7 @@ class Beam(object):
 class BeamSearch(object):
     def __init__(self, model, config, step):
         self.config = config
-        self.model = model
+        self.model = model.to(device)
 
         self._decode_dir = os.path.join(config.log_root, 'decode_S%s' % str(step))
         self._rouge_ref = os.path.join(self._decode_dir, 'rouge_ref')
@@ -55,7 +52,7 @@ class BeamSearch(object):
 
         if not os.path.exists(self._decode_dir): os.mkdir(self._decode_dir)
 
-        self.vocab = Vocab(config.vocab_path, config.vocab_size)
+        self.vocab = Vocab(config.vocab_file, config.vocab_size)
         self.test_data = CNNDMDataset('test', config.data_path, config, self.vocab)
         
         time.sleep(15) # ?
@@ -74,10 +71,10 @@ class BeamSearch(object):
         config = self.config
         start = time.time()
         counter = 0
-        test_loader = DataLoader(self.test_data, batch_size=1, shuffle = False, collate_fn=Collate())
+        test_loader = DataLoader(self.test_data, batch_size=1, shuffle = False, collate_fn=Collate(beam_size = config.beam_size))
         
-        ref = open(self._rouge_ref, 'r')
-        dec = open(self._rouge_dec, 'r')
+        ref = open(self._rouge_ref, 'w')
+        dec = open(self._rouge_dec, 'w')
         
         for batch in test_loader:
             # Run beam search to get best Hypothesis
@@ -98,7 +95,7 @@ class BeamSearch(object):
             original_abstract = batch.original_abstract[0]
 
             ref.write(original_abstract + '\n')
-            dec.writr(decoded_words + '\n')
+            dec.write(' '.join(decoded_words) + '\n')
 
             counter += 1
             if counter % 1000 == 0:
@@ -118,8 +115,9 @@ class BeamSearch(object):
 
         encoder_outputs, encoder_feature, encoder_hidden = self.model.encoder(enc_batch, enc_lens)
         s_t_0 = self.model.reduce_state(encoder_hidden)
-
+        
         dec_h, dec_c = s_t_0 # 1 x 2*hidden_size
+        
         dec_h = dec_h.squeeze()
         dec_c = dec_c.squeeze()
 
@@ -147,7 +145,6 @@ class BeamSearch(object):
                 state_h, state_c = h.state
                 all_state_h.append(state_h)
                 all_state_c.append(state_c)
-
                 all_context.append(h.context)
 
             s_t_1 = (torch.stack(all_state_h, 0).unsqueeze(0), torch.stack(all_state_c, 0).unsqueeze(0))

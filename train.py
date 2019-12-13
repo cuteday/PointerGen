@@ -1,10 +1,6 @@
 import argparse
 import os
-<<<<<<< HEAD
-import time
 import sys
-=======
->>>>>>> 80fc900931e92c41571fea5274eb2364ba10ded9
 
 import torch
 from torch.nn.utils import clip_grad_norm_
@@ -135,8 +131,10 @@ class Trainer:
 def test(config, model=None, step = 0):
     
     if model is None and config.test_from != '':
+        print('Testing model %s...'%config.test_from)
         saved_model = torch.load(config.test_from, map_location='cpu')
-        model = Model(config, is_eval=True).load_state_dict(saved_model['model'])
+        model = Model(config, is_eval=True)
+        model.load_state_dict(saved_model['model'])
         step = saved_model['step']
 
     predictor = BeamSearch(model, config, step)
@@ -152,6 +150,7 @@ if __name__ == '__main__':
     parser.add_argument('-model_path', default='../saved_models', type=str)
     parser.add_argument('-log_root', default='../results', type=str)
     parser.add_argument('-train_from', default='', type=str)
+    parser.add_argument('-test_from', default='', type=str)
     # model mode...
     parser.add_argument('-is_coverage', default=1, type=int)
     parser.add_argument('-pointer_gen', default=1, type=int)
@@ -159,6 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('-max_src_ntokens', default=400, type=int)
     parser.add_argument('-max_tgt_ntokens', default=100, type=int)
     parser.add_argument('-max_dec_steps', default=120, type=int)
+    parser.add_argument('-min_dec_steps', default=35, type=int)
     parser.add_argument('-batch_size', default=30, type=int)
     # Hyper params
     parser.add_argument('-learning_rate', default=0.20, type=float)
@@ -177,6 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('-save_every', default=5000, type=int)
     
     config_ = parser.parse_args()
-    trainer = Trainer(config_)
-    trainer.train()
+    # trainer = Trainer(config_)
+    # trainer.train()
+    test(config_)
 

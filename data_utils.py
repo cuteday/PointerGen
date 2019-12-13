@@ -72,7 +72,7 @@ def output2words(ids, vocab, article2oovs):
     for i in ids:
         try:
             w = vocab.id2word(i)
-        except ValueError as _:
+        except:
             w = article2oovs[i - vocab.size()]
         words.append(w)
     return words

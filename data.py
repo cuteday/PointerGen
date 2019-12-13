@@ -5,7 +5,6 @@ import pickle as pkl
 import torch
 
 from torch.utils.data import Dataset
-
 from data_utils import *
 
 class Example:
@@ -47,8 +46,7 @@ class Batch:
         # CNNDM中有114514个空样例
         # 过滤掉他们（我有特别的filter技巧~）
         batch = list(filter(lambda poi: len(poi.enc_inp)>0, batch))
-        if len(batch) < 30:
-            print('find %d empty example(s)...'%(30 - len(batch)))
+        print("len batch %d"%len(batch))
 
         dec_inp = [poi.dec_inp for poi in batch]
         dec_tgt = [poi.dec_tgt for poi in batch]
@@ -70,8 +68,8 @@ class Batch:
         self.enc_pad_mask = self.enc_inp.ne(PAD)
         self.dec_pad_mask = self.dec_inp.ne(PAD)
 
-        self.original_abs = [poi.original_abstract for poi in batch]
-        self.original_art = [poi.original_article for poi in batch]
+        self.original_abstract = [poi.original_abstract for poi in batch]
+        self.original_article = [poi.original_article for poi in batch]
 
 
 class CNNDMDataset(Dataset):
@@ -81,6 +79,7 @@ class CNNDMDataset(Dataset):
         self._n_data = _count_data(self._data_path)
         self.config = config
         self.vocab = vocab
+        print('cnn-dm %s set loaded! %d examples found.'%(split, self._n_data))
         
     def __len__(self) -> int:
         return self._n_data
@@ -117,6 +116,17 @@ class Vocab:
 
 
 class Collate():
+    def __init__(self, beam_size = 1):
+        self.beam = beam_size
+
+    def _collate(self, batch):
+        return Batch(batch * self.beam)
+
+    def __call__(self, batch):
+        return self._collate(batch)
+
+class CollateBeaming():
+
     def _collate(self, batch):
         return Batch(batch)
 
