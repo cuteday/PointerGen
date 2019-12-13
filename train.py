@@ -143,7 +143,7 @@ def test(config, model=None, step = 0):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='urara')
-    sys.stderr = open('stderr.txt','w+')
+    sys.stderr = open('../stderr.txt','w+')
     # data/ save
     parser.add_argument('-data_path', default=CNNDMPath, type=str)
     parser.add_argument('-glove_path', default=glovePath, type=str)

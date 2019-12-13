@@ -18,10 +18,9 @@ def make_vocab(wc, vocab_size):
     for i, t in enumerate(special_tokens):
         word2id[t] = i
         id2word[i] = t
-
     for i, (w, _) in enumerate(wc.most_common(vocab_size), 4):
-        word2id[w] = i + 4
-        id2word[i+4] = w
+        word2id[w] = i
+        id2word[i] = w
     return word2id, id2word
 
 def make_embedding(emb_file, vocab, emb_size=300):

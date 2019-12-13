@@ -11,7 +11,7 @@ class LSTMEncoder(nn.Module):
         super(LSTMEncoder, self).__init__()
 
         self.config = config
-        self.embedding = nn.Embedding(config.vocab_size + 100, config.emb_dim)
+        self.embedding = nn.Embedding(config.vocab_size + 4, config.emb_dim)
         self.lstm = nn.LSTM(config.emb_dim, config.hidden_dim, num_layers=1, batch_first=True, bidirectional=True)
         self.W_h = nn.Linear(config.hidden_dim * 2, config.hidden_dim * 2, bias=False)
 
