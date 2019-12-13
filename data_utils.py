@@ -67,13 +67,10 @@ def abstract2ids(words, vocab, article_oovs):
         else: ids.append(i)
     return ids
 
-def output2words(ids, vocab, article2oovs):
+def output2words(ids, vocab, art_oovs):
     words = []
     for i in ids:
-        try:
-            w = vocab.id2word(i)
-        except:
-            w = article2oovs[i - vocab.size()]
+        w = vocab.id2word(i) if i < vocab.size() else art_oovs[i - vocab.size()]
         words.append(w)
     return words
 

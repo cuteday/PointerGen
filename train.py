@@ -181,4 +181,5 @@ if __name__ == '__main__':
     # trainer = Trainer(config_)
     # trainer.train()
     test(config_)
+    # play(config_)
 

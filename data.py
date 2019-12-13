@@ -46,7 +46,6 @@ class Batch:
         # CNNDM中有114514个空样例
         # 过滤掉他们（我有特别的filter技巧~）
         batch = list(filter(lambda poi: len(poi.enc_inp)>0, batch))
-        print("len batch %d"%len(batch))
 
         dec_inp = [poi.dec_inp for poi in batch]
         dec_tgt = [poi.dec_tgt for poi in batch]
@@ -121,14 +120,6 @@ class Collate():
 
     def _collate(self, batch):
         return Batch(batch * self.beam)
-
-    def __call__(self, batch):
-        return self._collate(batch)
-
-class CollateBeaming():
-
-    def _collate(self, batch):
-        return Batch(batch)
 
     def __call__(self, batch):
         return self._collate(batch)

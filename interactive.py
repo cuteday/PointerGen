@@ -11,12 +11,13 @@ def play(config):
     model.load_state_dict(saved_model['model'])
     laser_beam = BeamSearch(model, config, 'intractive')
     while True:
-        article = input('Input something to summarize:')
-        data = {'article' : article, 'abstract' : 'for test'}
+        article = input('Input something to summarize:').lower()
+        article_words = word_tokenize(article)
+        data = {'article' : article_words, 'abstract' : 'for test'}
         entry = Example(config, vocab, data)
         normalized_input = Batch([entry] * config.beam_size)
         best_hyp = laser_beam.beam_search(normalized_input)
-        decoded_abstract = laser_beam.get_summary(best_hyp)
+        decoded_abstract = laser_beam.get_summary(best_hyp, normalized_input)
         print('Summary decoded:')
         print(decoded_abstract)
 
