@@ -55,7 +55,6 @@ class BeamSearch(object):
         self.vocab = Vocab(config.vocab_file, config.vocab_size)
         self.test_data = CNNDMDataset('test', config.data_path, config, self.vocab)
         
-        time.sleep(15) # ?
 
     def sort_beams(self, beams):
         return sorted(beams, key=lambda h: h.avg_log_prob, reverse=True)
@@ -66,6 +65,23 @@ class BeamSearch(object):
         files_rouge = FilesRouge(dec_path, ref_path)
         scores = files_rouge.get_scores(avg=True)
         logging(str(scores))
+
+    #@staticmethod
+    def get_summary(self, best_summary, batch):
+        # Extract the output ids from the hypothesis and convert back to words
+        output_ids = [int(t) for t in best_summary.tokens[1:]]
+        decoded_words = output2words(output_ids, self.vocab,
+                                                (batch.art_oovs[0] if self.config.pointer_gen else None))
+
+        # Remove the [STOP] token from decoded_words, if necessary
+        try:
+            fst_stop_idx = decoded_words.index('<end>')
+            decoded_words = decoded_words[:fst_stop_idx]
+        except ValueError:
+            decoded_words = decoded_words
+        decoded_abstract = ' '.join(decoded_words)
+        return decoded_abstract
+
 
     def decode(self):
         config = self.config
@@ -80,22 +96,11 @@ class BeamSearch(object):
             # Run beam search to get best Hypothesis
             best_summary = self.beam_search(batch)
 
-            # Extract the output ids from the hypothesis and convert back to words
-            output_ids = [int(t) for t in best_summary.tokens[1:]]
-            decoded_words = output2words(output_ids, self.vocab,
-                                                 (batch.art_oovs[0] if config.pointer_gen else None))
-
-            # Remove the [STOP] token from decoded_words, if necessary
-            try:
-                fst_stop_idx = decoded_words.index('<end>')
-                decoded_words = decoded_words[:fst_stop_idx]
-            except ValueError:
-                decoded_words = decoded_words
-
             original_abstract = batch.original_abstract[0]
+            decoded_abstract = self.get_summary(best_summary, batch)
 
             ref.write(original_abstract + '\n')
-            dec.write(' '.join(decoded_words) + '\n')
+            dec.write(decoded_abstract + '\n')
 
             counter += 1
             if counter % 1000 == 0:
@@ -200,5 +205,3 @@ class BeamSearch(object):
         beams_sorted = self.sort_beams(results)
 
         return beams_sorted[0]
-
-

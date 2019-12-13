@@ -14,6 +14,7 @@ from utils.logging import logging
 from models.model import Model
 from models.utils import calc_running_avg_loss
 from decode import BeamSearch
+from interactive import play
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
